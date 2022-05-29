@@ -1,2 +1,2 @@
-# Smart-Contract-Lottery
+# Smart Contract Lottery
 Lottery game in the blockchain.
