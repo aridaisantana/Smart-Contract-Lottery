@@ -20,9 +20,19 @@ module.exports = {
         },
         rinkeby: {
             chainId: 4,
-            blockConfirmations: 6,
             url: RINKEBY_RPC_URL,
             accounts: [PRIVATE_KEY],
+        },
+    },
+    gasReporter: {
+        enabled: false,
+        currency: "USD",
+        outputFile: "gas-report.txt",
+        noColors: true,
+    },
+    etherscan: {
+        apiKey: {
+            rinkeby: ETHERSCAN_API_KEY,
         },
     },
     solidity: "0.8.7",
@@ -33,5 +43,8 @@ module.exports = {
         player: {
             default: 1,
         },
+    },
+    mocha: {
+        timeout: 300000,
     },
 }
