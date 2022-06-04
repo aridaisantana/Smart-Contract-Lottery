@@ -9,6 +9,7 @@ const LotteryEntrance = () => {
   const [entranceFee, setEntranceFee] = useState("0");
   const [numberOfPlayers, setNumberOfPlayers] = useState("0");
   const [recentWinner, setRecentWinner] = useState("0");
+  const [isTxLoading, setIsTxLoading] = useState(false);
   const { chainId: chainIdHex, isWeb3Enabled } = useMoralis();
   const dispatch = useNotification();
   const chainId = parseInt(chainIdHex);
@@ -58,14 +59,25 @@ const LotteryEntrance = () => {
   };
 
   useEffect(() => {
-    if (isWeb3Enabled) {
+    if (isWeb3Enabled && chainId in contractAddresses) {
       updateUI();
+    } else if (isWeb3Enabled && !(chainId in contractAddresses)) {
+      const supportedChains = Object.keys(contractAddresses).toString();
+      dispatch({
+        type: "error",
+        message: "Please connect to a supported chain: " + supportedChains,
+        title: "Wrong chain",
+        position: "topR",
+        icon: "exclamation",
+      });
     }
-  }, [isWeb3Enabled]);
+  }, [isWeb3Enabled, chainId]);
 
   const handleSuccess = async (tx) => {
+    setIsTxLoading(true);
     await tx.wait(1);
-    handleNewNotification(tx);
+    setIsTxLoading(false);
+    handleNewNotification();
     updateUI();
   };
 
@@ -80,44 +92,53 @@ const LotteryEntrance = () => {
   };
 
   return (
-    <div>
-      <div className="flex">
+    <div className="container mx-auto p-2">
+      <div className="flex border-b-2 w-100">
         <div className="m-auto">
-          <h1 className="mt-5 font-bold lg:text-4xl md:text-3xl sm:text-2xl text-lg">
+          <h1 className="mt-15 md:mt-20 text-center font-bold lg:text-4xl md:text-3xl sm:text-2xl text-lg">
             Welcome to the Decentralized Lottery!
           </h1>
-          <p className="text-center font-extralight mt-3">
+          <p className="text-center text-sm md:text-xl font-bold  m-3">
             100% fair for everyone thanks to Smart Contracts 😎
           </p>
         </div>
       </div>
-      <div className="items-center justify-center m-auto py-5">
-        {raffleAddress ? (
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-auto"
-            onClick={async () =>
-              await enterRaffle({
-                onSuccess: handleSuccess,
-                onError: (error) => console.log(error),
-              })
-            }
-            disabled={isLoading || isFetching}
-          >
-            {isLoading || isFetching ? (
-              <div className="animate-spin spinner-border h-8 w-8 border-b-2 rounded-full"></div>
+      <div className="pt-8 font-mono flex">
+        <div className="m-auto ">
+          <p className="sm:text-base md:text-lg">
+            {" "}
+            Number of Players: {numberOfPlayers}
+          </p>
+          <p className="text-sm sm:text-base md:text-lg">
+            Recent Winner: {recentWinner}
+          </p>
+          <div className="mt-5 text-sm md:text-md flex-col">
+            {raffleAddress ? (
+              <button
+                className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-green-400 hover:to-blue-500 font-bold py-2 px-4 rounded ml-auto"
+                onClick={async () =>
+                  await enterRaffle({
+                    onSuccess: handleSuccess,
+                    onError: (error) => console.log(error),
+                  })
+                }
+                disabled={isLoading || isFetching || isTxLoading}
+              >
+                {isLoading || isFetching || isTxLoading ? (
+                  <div className="animate-spin spinner-border h-8 w-8 border-b-2 rounded-full"></div>
+                ) : (
+                  <div>Enter Raffle</div>
+                )}
+              </button>
             ) : (
-              <div>Enter Raffle</div>
+              <p>You need a connected account for playing!</p>
             )}
-          </button>
-        ) : (
-          <div>No Raffle Address Detected</div>
-        )}
-        <p>
-          Lottery Entrance Fee:
-          {ethers.utils.formatUnits(entranceFee, "ether")} ETH
-        </p>
-        <p> Number of Players: {numberOfPlayers}</p>
-        <p>Recent Winner: {recentWinner}</p>
+            <p>
+              Lottery Entrance Fee:{" "}
+              {ethers.utils.formatUnits(entranceFee, "ether")} ETH
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
